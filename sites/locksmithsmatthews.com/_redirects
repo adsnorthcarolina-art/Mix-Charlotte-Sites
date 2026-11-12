@@ -1,0 +1,13 @@
+/House-Lock-Re-Key /services/lock-rekeying/ 301
+/House-Lock-Change /services/residential-lock-change/ 301
+/Business-Lock-Re-Key /services/lock-rekeying/ 301
+/Business-Lock-Change /services/commercial-lock-change/ 301
+/Building-Key-Copying /services/ 301
+/Car-Key-Copying /services/car-key-copying/ 301
+/Emergency-Locksmith /emergency/ 301
+/house-lockout /services/house-business-lockout/ 301
+/business-lockout /services/house-business-lockout/ 301
+/car-lockout /services/car-lockout/ 301
+/faq /#faq 301
+/blog / 301
+/blog/* / 301
