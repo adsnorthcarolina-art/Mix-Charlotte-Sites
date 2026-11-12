@@ -76,6 +76,10 @@ class Site:
                         f"}})(window,document,'script','dataLayer','{d['gtm']}');</script>")
             gtm_body = (f'<noscript><iframe src="https://www.googletagmanager.com/ns.html?id={d["gtm"]}" height="0" width="0" '
                         'style="display:none;visibility:hidden"></iframe></noscript>')
+        elif d.get("ga4"):
+            gtm_head = (f'<script async src="https://www.googletagmanager.com/gtag/js?id={d["ga4"]}"></script>'
+                        "<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}"
+                        f"gtag('js',new Date());gtag('config','{d['ga4']}');</script>")
         soc = d["social"]
         page = f"""<!doctype html>
 <html lang="en">
