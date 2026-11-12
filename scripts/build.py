@@ -257,6 +257,77 @@ Phone: <a href="{self.tel}">{d['phone']}</a><br>
 <p class="form-status" role="status"></p>
 </form>"""
 
+    def social_images(self):
+        """Profile picture and banners for the social networks -> img/social/ (needs Pillow; skipped without it)."""
+        try:
+            from PIL import Image, ImageDraw, ImageFont
+        except ImportError:
+            print("Pillow not installed - social images skipped")
+            return
+        d = self.d
+        if not d.get("logo_box"):
+            return
+        img = self.out / "img"
+        x1, y1, x2, y2, size = d["logo_box"]
+        logo_file = img / f"logo-{size}.jpg"
+        if not logo_file.exists():
+            return
+        logo = Image.open(logo_file).convert("RGB").crop((x1 - 8, y1 - 8, x2 + 8, y2 + 8))
+        dest = img / "social"
+        dest.mkdir(exist_ok=True)
+
+        def font(px):
+            try:
+                return ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", px)
+            except OSError:
+                return ImageFont.load_default(px)
+
+        def cover(im, w, h):
+            s = max(w / im.width, h / im.height)
+            im = im.resize((round(im.width * s) + 1, round(im.height * s) + 1))
+            left, top = (im.width - w) // 2, (im.height - h) // 2
+            return im.crop((left, top, left + w, top + h))
+
+        def avatar(n):
+            c = Image.new("RGB", (n, n), "#ffffff")
+            w = round(n * 0.74)
+            lg = logo.resize((w, round(logo.height * w / logo.width)), Image.LANCZOS)
+            c.paste(lg, ((n - w) // 2, (n - lg.height) // 2))
+            return c
+
+        photos = [p for p in sorted(img.glob("p*-500.jpg"))][:3]
+
+        def banner(w, h, sw, sh):
+            c = Image.new("RGB", (w, h), "#190b04")
+            if photos:
+                pw = w // len(photos) + 1
+                for i, p in enumerate(photos):
+                    c.paste(cover(Image.open(p).convert("RGB"), pw, h), (i * pw, 0))
+            c = Image.blend(c, Image.new("RGB", (w, h), "#0f0803"), 0.78)
+            dr = ImageDraw.Draw(c)
+            bar = max(4, round(h * 0.035))
+            dr.rectangle([0, 0, w, bar], fill="#e8b548")
+            dr.rectangle([0, h - bar, w, h], fill="#e8b548")
+            x0, y0 = (w - sw) // 2, (h - sh) // 2
+            lw = round(sw * 0.30)
+            lg = logo.resize((lw, round(logo.height * lw / logo.width)), Image.LANCZOS)
+            pad = round(lw * 0.06)
+            ly = y0 + (sh - lg.height) // 2
+            dr.rounded_rectangle([x0 + round(sw * 0.03) - pad, ly - pad, x0 + round(sw * 0.03) + lw + pad, ly + lg.height + pad],
+                                 radius=round(lw * 0.05), fill="#ffffff")
+            c.paste(lg, (x0 + round(sw * 0.03), ly))
+            tx = x0 + round(sw * 0.40)
+            dr.text((tx, y0 + sh * 0.22), "24/7 MOBILE LOCKSMITH", font=font(round(sh * 0.15)), fill="#ffffff", anchor="lm")
+            dr.text((tx, y0 + sh * 0.50), d["phone"], font=font(round(sh * 0.24)), fill="#f9c751", anchor="lm")
+            dr.text((tx, y0 + sh * 0.80), f'{d["city"]}, {d["st"]}  -  {d["domain"]}', font=font(round(sh * 0.11)), fill="#ffffff", anchor="lm")
+            return c
+
+        avatar(720).save(dest / "avatar.jpg", quality=92)
+        banner(1640, 624, 1100, 330).save(dest / "fb-cover.jpg", quality=90)
+        banner(1500, 500, 1100, 300).save(dest / "x-header.jpg", quality=90)
+        banner(2048, 1152, 1235, 338).save(dest / "youtube-banner.jpg", quality=90)
+        print(f"social images -> {dest}")
+
     # ---------- pages ----------
     def build(self):
         self.home()
@@ -275,6 +346,7 @@ Phone: <a href="{self.tel}">{d['phone']}</a><br>
         self.extras()
         if self.local:
             self.fetch_photos()
+            self.social_images()
 
     def home(self):
         d = self.d
