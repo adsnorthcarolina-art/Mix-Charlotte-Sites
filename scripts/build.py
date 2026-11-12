@@ -37,6 +37,8 @@ class Site:
         self.loc = f'{d["city"]}, {d["st"]}'
         self.cats = {c["slug"]: c for c in d["categories"]}
         self.year = date.today().year
+        import hashlib
+        self.ver = {f: hashlib.sha1((ROOT / "assets" / f).read_bytes()).hexdigest()[:8] for f in ("site.css", "site.js")}
 
     # ---------- helpers ----------
     def img(self, key, size=800):
@@ -91,7 +93,7 @@ class Site:
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://lh3.googleusercontent.com">
-<link rel="stylesheet" href="/assets/site.css">
+<link rel="stylesheet" href="/assets/site.css?v={self.ver['site.css']}">
 {gtm_head}{ld}
 </head>
 <body>
@@ -123,7 +125,7 @@ Phone: <a href="{self.tel}">{d['phone']}</a><br>
 </div></footer>
 <div class="callbar"><a class="c1" href="{self.tel}">Call {d['phone']}</a><a class="c2" href="/book/">Book Online</a></div>
 <button class="totop" aria-label="Back to top">&#9650;</button>
-<script src="/assets/site.js" defer></script>
+<script src="/assets/site.js?v={self.ver['site.js']}" defer></script>
 </body>
 </html>
 """
