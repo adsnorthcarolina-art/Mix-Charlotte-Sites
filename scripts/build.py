@@ -98,7 +98,7 @@ class Site:
                  f'background-size:{size * s:.1f}px {size * s:.1f}px;background-position:{pad - x1 * s:.1f}px {pad - y1 * s:.1f}px')
         return f'<span class="logo" role="img" aria-label="{E(d["business"])} logo" style="{style}"></span>'
 
-    def write(self, path, title, desc, body, schema=None, hero=""):
+    def write(self, path, title, desc, body, schema=None, hero="", head=""):
         """path like '/' or '/services/car-lockout/'"""
         d = self.d
         url = self.base + path
@@ -138,6 +138,7 @@ class Site:
 <meta property="og:image" content="{self.absurl(self.img('hero', 1200))}">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+{head}
 {'' if self.local else '<link rel="preconnect" href="https://lh3.googleusercontent.com">'}
 <link rel="stylesheet" href="/assets/site.css?v={self.ver['site.css']}">
 {gtm_head}{ld}
@@ -355,7 +356,12 @@ Phone: <a href="{self.tel}">{d['phone']}</a><br>
             f'<a class="tile" href="/{c["slug"]}/"><img src="{self.img(c["photo"], 500)}" alt="{E(c["name"])} in {E(self.loc)}" width="500" height="400">'
             f'<span>{E(c["name"].replace(" Locksmith", ""))}<br>Locksmith</span></a>' for c in d["categories"])
         pay = "".join(f"<li>{E(p)}</li>" for p in d["payments"])
-        hero = f"""<section class="hero" style="background-image:url({self.img('hero', 1200)})">
+        # the hero photo is the LCP element: preload it, and send phones a smaller file
+        h_big, h_small = self.img('hero', 1200), self.img('hero', 700)
+        hero_head = (f'<link rel="preload" as="image" href="{h_small}" media="(max-width:700px)" fetchpriority="high">'
+                     f'<link rel="preload" as="image" href="{h_big}" media="(min-width:701px)" fetchpriority="high">'
+                     f'<style>.hero.home{{background-image:url({h_big})}}@media(max-width:700px){{.hero.home{{background-image:url({h_small})}}}}</style>')
+        hero = f"""<section class="hero home">
 <p class="tag">A mobile locksmith company</p>
 <p class="tel">Call Today: <a href="{self.tel}">{d['phone']}</a></p>
 <ul class="pay" aria-label="Payment methods">{pay}</ul>
@@ -420,9 +426,9 @@ Phone: <a href="{self.tel}">{d['phone']}</a><br>
 {self.cta()}"""
         faq_schema = {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": f["q"], "acceptedAnswer": {"@type": "Answer", "text": f["a"]}} for f in d["faq"]]}
-        self.write("/", f'{d["business"]} | 24/7 Mobile Locksmith in {self.loc} | {d["phone"]}',
+        self.write("/", f'{d["business"]} | Locksmith in {self.loc} | {d["phone"]}',
                    f'{d["business"]} is a mobile locksmith in {self.loc} {d["zip"]}, open 24/7. Car keys, lockouts, rekeying, lock changes and commercial hardware. Call {d["phone"]}.',
-                   body, [faq_schema], hero)
+                   body, [faq_schema], hero, head=hero_head)
 
     def category(self, c):
         d = self.d
