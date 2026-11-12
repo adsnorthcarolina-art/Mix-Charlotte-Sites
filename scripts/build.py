@@ -398,7 +398,7 @@ Phone: <a href="{self.tel}">{d['phone']}</a><br>
         read_url, write_url = self.review_urls()
         years = self.year - d["since"]
         body = f"""<section class="sec"><div class="wrap">
-<h1>{E(d['business'])} &ndash; We Are Mobile!</h1>
+<h1>24/7 Mobile Locksmith in {E(self.loc)}</h1>
 <p class="lead">Serving {E(self.loc)} {d['zip']} and nearby towns, 24 hours a day.</p>
 <img class="float" src="{self.img('van', 500)}" alt="Car key and remote made by {E(d['business'])}" width="500" height="500">
 <p>Need a mobile locksmith? {E(d['legal_name'])} is a local, veteran-owned company that has worked in {E(d['city'])} since {d['since']}. Our technicians come to your home, your business or your vehicle with the tools, locks and key blanks already on the van, so most jobs are finished in one visit.</p>
