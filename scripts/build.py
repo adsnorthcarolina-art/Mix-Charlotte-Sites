@@ -543,7 +543,7 @@ Phone: <a href="{self.tel}">{d['phone']}</a><br>
             '<rect x="16" y="28" width="32" height="24" rx="4" fill="#190b04"/><circle cx="32" cy="39" r="4" fill="#e8b548"/></svg>', encoding="utf-8")
         red = "".join(f"{a} {b} 301\n" for a, b in d.get("redirects", []))
         (out / "_redirects").write_text(red, encoding="utf-8")
-        (out / "_headers").write_text("/assets/*\n  Cache-Control: public, max-age=604800\n/img/*\n  Cache-Control: public, max-age=2592000\n", encoding="utf-8")
+        (out / "_headers").write_text("/assets/*\n  Cache-Control: public, max-age=604800\n/img/*\n  Cache-Control: public, max-age=2592000\n  Access-Control-Allow-Origin: *\n", encoding="utf-8")
         nf = (f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
               f'<title>Page not found | {E(d["business"])}</title><meta name="robots" content="noindex"><link rel="stylesheet" href="/assets/site.css"></head>'
               f'<body><header class="top"><div class="wrap"><a class="brand" href="/">{E(d["business"])}</a></div></header>'
