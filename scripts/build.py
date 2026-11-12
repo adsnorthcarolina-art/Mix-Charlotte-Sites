@@ -8,6 +8,7 @@ Writes  sites/<domain>/   (plain HTML, one folder per page)
 With FETCH_PHOTOS=1 the photos are downloaded into sites/<domain>/img/ and the
 pages use those local files (used as the Cloudflare Pages build command, where
 the network is available). Without it the pages load the photos from photo_base.
+A failed photo download stops the build, so a broken deploy never goes live.
 """
 import html
 import json
