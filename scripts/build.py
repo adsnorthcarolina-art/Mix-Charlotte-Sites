@@ -161,7 +161,7 @@ Email: <a href="mailto:{d['email']}">{d['email']}</a><br>
 Phone: <a href="{self.tel}">{d['phone']}</a><br>
 <a href="{self.base}/">{self.base.replace('https://', '')}</a></p>
 <p>We accept: {E(', '.join(d['payments']))}</p>
-<p><a href="{soc['facebook']}" rel="noopener">Facebook</a> · <a href="{soc['instagram']}" rel="noopener">Instagram</a> · <a href="{soc['x']}" rel="noopener">X</a> · <a href="{soc['youtube']}" rel="noopener">YouTube</a> · <a href="{soc['tiktok']}" rel="noopener">TikTok</a></p></div>
+<p><a href="https://www.google.com/maps?cid={d['cid']}" rel="noopener">Google Maps</a> · <a href="{soc['facebook']}" rel="noopener">Facebook</a> · <a href="{soc['instagram']}" rel="noopener">Instagram</a> · <a href="{soc['x']}" rel="noopener">X</a> · <a href="{soc['youtube']}" rel="noopener">YouTube</a> · <a href="{soc['tiktok']}" rel="noopener">TikTok</a></p></div>
 <div><h2>Main Navigation</h2>
 <p class="navlinks">{''.join(f'<a href="{h}">{t}</a>' for h, t in nav)}<a href="/book/">Book a Locksmith</a></p>
 <h2>Service Areas</h2>
@@ -550,6 +550,16 @@ Phone: <a href="{self.tel}">{d['phone']}</a><br>
 </ul>
 <h2>Our customers</h2>
 <p>{d['rating']['count']} customers have reviewed us on Google, with an average rating of {d['rating']['value']} out of 5. <a href="/reviews/">Read some of their reviews</a>.</p>
+<h2 id="online">Find us online</h2>
+<p>These are the official profiles of {E(d['business'])}. They all show the same phone number, {d['phone']}, and link back to this website.</p>
+<ul class="ticks">
+<li><a href="https://www.google.com/maps?cid={d['cid']}" rel="noopener">Google Business Profile</a>: map listing, photos, reviews and weekly updates</li>
+<li><a href="{d['social']['facebook']}" rel="noopener">Facebook</a>: news, posts and reels</li>
+<li><a href="{d['social']['instagram']}" rel="noopener">Instagram</a>: job photos and reels</li>
+<li><a href="{d['social']['youtube']}" rel="noopener">YouTube</a>: short videos of our work{f' (<a href="{d["video"]}" rel="noopener">watch our latest video</a>)' if d.get('video') else ''}</li>
+<li><a href="{d['social']['tiktok']}" rel="noopener">TikTok</a>: short videos</li>
+<li><a href="{d['social']['x']}" rel="noopener">X</a>: updates and offers</li>
+</ul>
 </div></section>{self.cta()}"""
         self.write("/about/", f'About Us | {d["business"]} | {self.loc}',
                    f'About {d["legal_name"]}: a mobile, veteran-owned locksmith company serving {self.loc} since {d["since"]}, open 24/7. Call {d["phone"]}.',
@@ -613,7 +623,12 @@ Phone: <a href="{self.tel}">{d['phone']}</a><br>
             '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#e8b548"/>'
             '<path d="M22 28v-6a10 10 0 0 1 20 0v6" fill="none" stroke="#190b04" stroke-width="5"/>'
             '<rect x="16" y="28" width="32" height="24" rx="4" fill="#190b04"/><circle cx="32" cy="39" r="4" fill="#e8b548"/></svg>', encoding="utf-8")
-        red = "".join(f"{a} {b} 301\n" for a, b in d.get("redirects", []))
+        rows = []
+        for a, b in d.get("redirects", []):
+            rows.append((a, b))
+            if not a.endswith("*") and not a.endswith("/"):
+                rows.append((a + "/", b))  # old URLs are indexed with a trailing slash too
+        red = "".join(f"{a} {b} 301\n" for a, b in rows)
         (out / "_redirects").write_text(red, encoding="utf-8")
         (out / "_headers").write_text("/assets/*\n  Cache-Control: public, max-age=604800\n/img/*\n  Cache-Control: public, max-age=2592000\n  Access-Control-Allow-Origin: *\n", encoding="utf-8")
         nf = (f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'

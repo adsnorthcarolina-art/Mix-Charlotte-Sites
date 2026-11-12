@@ -24,7 +24,7 @@
  "logo_photo": "a-/ALV-UjXVTwwHRj-VHhFuhiTpDfcvvaFbdszcEXHga_IwH1_nKqR8dM5C",
  "logo_box": [194, 308, 520, 400, 720],
  "social": {
-  "facebook": "https://www.facebook.com/profile.php?id=61579045752298",
+  "facebook": "https://www.facebook.com/MatthewsLocksmithnc",
   "instagram": "https://www.instagram.com/matthewslocksmithnc/",
   "x": "https://x.com/MatthewsLocksmi",
   "youtube": "https://www.youtube.com/@MatthewsLockmith",
@@ -204,6 +204,27 @@
   ["/car-lockout", "/services/car-lockout/"],
   ["/faq", "/#faq"],
   ["/blog", "/"],
-  ["/blog/*", "/"]
- ]
+  ["/blog/*", "/"],
+  ["/our-services", "/services/"],
+  ["/service-areas", "/areas/"],
+  ["/emergency-locksmith", "/emergency/"],
+  ["/commercial-locksmith", "/commercial/"],
+  ["/car-locksmith", "/automotive/"],
+  ["/residential-locksmith", "/residential/"],
+  ["/residentials-locksmith", "/residential/"],
+  ["/lock-change-rekey", "/services/lock-rekeying/"],
+  ["/mailbox-locksmith", "/residential/"],
+  ["/locksmith-services-matthews", "/areas/matthews/"],
+  ["/locksmith-services-indian-trail", "/areas/indian-trail/"],
+  ["/locksmith-services-waxhaw", "/areas/waxhaw/"],
+  ["/locksmith-services-harrisburg", "/areas/harrisburg/"],
+  ["/locksmith-services-pineville", "/areas/pineville/"],
+  ["/locksmith-services-concord", "/areas/"],
+  ["/locksmith-services-huntersville", "/areas/"],
+  ["/locksmith-services-belmont", "/areas/"],
+  ["/locksmith-services-fort-mill", "/areas/"],
+  ["/locksmith-services-lake-norman", "/areas/"],
+  ["/locksmith-services-*", "/areas/"]
+ ],
+ "video": "https://youtube.com/shorts/u-4bQCCmWdU"
 }
