@@ -121,9 +121,12 @@ class Site:
             gtm_body = (f'<noscript><iframe src="https://www.googletagmanager.com/ns.html?id={d["gtm"]}" height="0" width="0" '
                         'style="display:none;visibility:hidden"></iframe></noscript>')
         elif d.get("ga4"):
-            gtm_head = (f'<script async src="https://www.googletagmanager.com/gtag/js?id={d["ga4"]}"></script>'
-                        "<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}"
-                        f"gtag('js',new Date());gtag('config','{d['ga4']}');</script>")
+            # gtag.js is loaded after the page has rendered so it does not compete with the first paint;
+            # events fired before that wait in dataLayer
+            gtm_head = ("<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}"
+                        f"gtag('js',new Date());gtag('config','{d['ga4']}');"
+                        "addEventListener('load',function(){setTimeout(function(){var s=document.createElement('script');s.async=1;"
+                        f"s.src='https://www.googletagmanager.com/gtag/js?id={d['ga4']}';document.head.appendChild(s)}},1200)}});</script>")
         soc = d["social"]
         page = f"""<!doctype html>
 <html lang="en">
@@ -359,7 +362,7 @@ Phone: <a href="{self.tel}">{d['phone']}</a><br>
             f'<span>{E(c["name"].replace(" Locksmith", ""))}<br>Locksmith</span></a>' for c in d["categories"])
         pay = "".join(f"<li>{E(p)}</li>" for p in d["payments"])
         # the hero photo is the LCP element: preload it, and send phones a smaller file
-        h_big, h_small = self.img('hero', 1200), self.img('hero', 700)
+        h_big, h_small = self.img('hero', 1200), self.img('hero', 480)  # dark overlay hides the low resolution
         hero_head = (f'<link rel="preload" as="image" href="{h_small}" media="(max-width:700px)" fetchpriority="high">'
                      f'<link rel="preload" as="image" href="{h_big}" media="(min-width:701px)" fetchpriority="high">'
                      f'<style>.hero.home{{background-image:url({h_big})}}@media(max-width:700px){{.hero.home{{background-image:url({h_small})}}}}</style>')
