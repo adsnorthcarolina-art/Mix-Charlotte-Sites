@@ -21,6 +21,7 @@
  "rating": {"value": "4.8", "count": 188},
  "photo_base": "https://lh3.googleusercontent.com/",
  "logo_photo": "a-/ALV-UjXVTwwHRj-VHhFuhiTpDfcvvaFbdszcEXHga_IwH1_nKqR8dM5C",
+ "logo_box": [194, 308, 520, 400, 720],
  "social": {
   "facebook": "https://www.facebook.com/profile.php?id=61579045752298",
   "instagram": "https://www.instagram.com/matthewslocksmithnc/",

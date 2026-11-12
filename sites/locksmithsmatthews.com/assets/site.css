@@ -145,3 +145,8 @@ footer .navlinks a{display:inline-block;margin:0 10px 8px 0}
   .totop{bottom:20px}
   .cols{columns:4}
 }
+
+/* logo (cropped from the profile logo image) */
+.logo{display:inline-block;background-color:#fff;background-repeat:no-repeat;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.35);vertical-align:middle}
+.brand{display:flex;align-items:center}
+footer .logo{margin-bottom:16px}

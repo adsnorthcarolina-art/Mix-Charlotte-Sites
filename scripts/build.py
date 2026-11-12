@@ -42,6 +42,18 @@ class Site:
     def img(self, key, size=800):
         return f'{self.d["photo_base"]}{self.d["photos"][key]}=s{size}'
 
+    def logo(self, width=150, pad=4):
+        """Business logo as a cropped background image (logo_box = x1,y1,x2,y2,source size)."""
+        d = self.d
+        if not d.get("logo_box"):
+            return ""
+        x1, y1, x2, y2, size = d["logo_box"]
+        s = width / (x2 - x1)
+        w, h = round(width + 2 * pad), round((y2 - y1) * s + 2 * pad)
+        style = (f'width:{w}px;height:{h}px;background-image:url({d["photo_base"]}{d["logo_photo"]}=s{size});'
+                 f'background-size:{size * s:.1f}px {size * s:.1f}px;background-position:{pad - x1 * s:.1f}px {pad - y1 * s:.1f}px')
+        return f'<span class="logo" role="img" aria-label="{E(d["business"])} logo" style="{style}"></span>'
+
     def write(self, path, title, desc, body, schema=None, hero=""):
         """path like '/' or '/services/car-lockout/'"""
         d = self.d
@@ -84,7 +96,7 @@ class Site:
 </head>
 <body>
 {gtm_body}<header class="top"><div class="wrap">
-<a class="brand" href="/">{E(d['business'])}</a>
+<a class="brand" href="/" aria-label="{E(d['business'])} home">{self.logo(150) or E(d['business'])}</a>
 <button class="burger" aria-label="Menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
 <nav class="nav" id="nav" aria-label="Main">{nav_html}</nav>
 </div></header>
@@ -94,7 +106,7 @@ class Site:
 </main>
 <footer><div class="wrap">
 <div class="cols2">
-<div><h2>More Information</h2>
+<div>{self.logo(190)}<h2>More Information</h2>
 <p><strong>{E(d['legal_name'])}</strong><br>24 Hour Locksmith<br>Monday through Sunday, all day<br>
 Mobile service from {E(self.loc)} {d['zip']}<br>
 Email: <a href="mailto:{d['email']}">{d['email']}</a><br>
@@ -403,7 +415,7 @@ Phone: <a href="{self.tel}">{d['phone']}</a><br>
         hero = self.small_hero(f'About {d["business"]}', f'A local, mobile locksmith company serving {self.loc} since {d["since"]}.', trail)
         logo = f'{d["photo_base"]}{d["logo_photo"]}=s420'
         body = f"""<section class="sec"><div class="wrap">
-<img class="logo-card" src="{logo}" alt="{E(d['business'])} logo" width="210" height="76">
+<p class="center">{self.logo(240, 8)}</p>
 <h2>Who we are</h2>
 <p>{E(d['legal_name'])} is a mobile locksmith company based in {E(self.loc)}. We opened in {d['since']} and have been helping drivers, homeowners and business owners in {E(d['city'])} and the surrounding towns ever since.{' The business is veteran-owned.' if d.get('veteran_owned') else ''}</p>
 <p>We do not run a storefront. Instead, our vans carry the locks, keys, remotes and machines needed to finish the job where you are, whether that is a driveway, an office or a parking lot.</p>
