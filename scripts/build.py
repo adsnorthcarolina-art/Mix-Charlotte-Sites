@@ -4,11 +4,18 @@
 Usage:  python3 scripts/build.py <domain>
 Reads   data/<domain>.json  and  assets/site.css, assets/site.js
 Writes  sites/<domain>/   (plain HTML, one folder per page)
+
+With FETCH_PHOTOS=1 the photos are downloaded into sites/<domain>/img/ and the
+pages use those local files (used as the Cloudflare Pages build command, where
+the network is available). Without it the pages load the photos from photo_base.
 """
 import html
 import json
+import os
 import shutil
 import sys
+import time
+import urllib.request
 from datetime import date
 from pathlib import Path
 
@@ -37,12 +44,46 @@ class Site:
         self.loc = f'{d["city"]}, {d["st"]}'
         self.cats = {c["slug"]: c for c in d["categories"]}
         self.year = date.today().year
+        self.local = os.environ.get("FETCH_PHOTOS") == "1"
+        self.needed = {}
         import hashlib
         self.ver = {f: hashlib.sha1((ROOT / "assets" / f).read_bytes()).hexdigest()[:8] for f in ("site.css", "site.js")}
 
     # ---------- helpers ----------
+    def photo(self, name, pid, size):
+        """URL of a photo: local file when FETCH_PHOTOS=1, else the remote one."""
+        remote = f'{self.d["photo_base"]}{pid}=s{size}'
+        if not self.local:
+            return remote
+        fn = f"{name}-{size}.jpg"
+        self.needed[fn] = remote + "-rj"
+        return f"/img/{fn}"
+
     def img(self, key, size=800):
-        return f'{self.d["photo_base"]}{self.d["photos"][key]}=s{size}'
+        return self.photo(key, self.d["photos"][key], size)
+
+    def absurl(self, u):
+        return self.base + u if u.startswith("/") else u
+
+    def fetch_photos(self):
+        dest = self.out / "img"
+        dest.mkdir(parents=True, exist_ok=True)
+        for fn, url in sorted(self.needed.items()):
+            data = b""
+            for attempt in range(4):
+                try:
+                    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (site build)"})
+                    with urllib.request.urlopen(req, timeout=30) as r:
+                        data = r.read()
+                    if len(data) > 2000:
+                        break
+                except Exception as e:  # noqa: BLE001
+                    print(f"  retry {fn}: {e}")
+                time.sleep(2 + attempt * 2)
+            if len(data) <= 2000:
+                sys.exit(f"photo download failed: {fn} <- {url}")
+            (dest / fn).write_bytes(data)
+        print(f"downloaded {len(self.needed)} photos -> {dest}")
 
     def logo(self, width=150, pad=4):
         """Business logo as a cropped background image (logo_box = x1,y1,x2,y2,source size)."""
@@ -52,7 +93,7 @@ class Site:
         x1, y1, x2, y2, size = d["logo_box"]
         s = width / (x2 - x1)
         w, h = round(width + 2 * pad), round((y2 - y1) * s + 2 * pad)
-        style = (f'width:{w}px;height:{h}px;background-image:url({d["photo_base"]}{d["logo_photo"]}=s{size});'
+        style = (f'width:{w}px;height:{h}px;background-image:url({self.photo("logo", d["logo_photo"], size)});'
                  f'background-size:{size * s:.1f}px {size * s:.1f}px;background-position:{pad - x1 * s:.1f}px {pad - y1 * s:.1f}px')
         return f'<span class="logo" role="img" aria-label="{E(d["business"])} logo" style="{style}"></span>'
 
@@ -63,8 +104,8 @@ class Site:
         nav = [("/", "Home"), ("/automotive/", "Automotive"), ("/commercial/", "Commercial"),
                ("/emergency/", "Emergency"), ("/residential/", "Residential"), ("/services/", "Services"),
                ("/areas/", "Areas"), ("/about/", "About"), ("/reviews/", "Reviews"), ("/contact/", "Contact Us")]
-        nav_html = "".join(
-            f'<a href="{h}"{" aria-current=\"page\"" if h == path else ""}>{t}</a>' for h, t in nav)
+        cur = ' aria-current="page"'
+        nav_html = "".join(f'<a href="{h}"{cur if h == path else ""}>{t}</a>' for h, t in nav)
         nav_html += f'<a class="call" href="{self.tel}">Call: {d["phone"]}</a>'
         schemas = [self.business_schema()] + (schema or [])
         ld = "".join(f'<script type="application/ld+json">{json.dumps(s, ensure_ascii=False)}</script>' for s in schemas)
@@ -93,10 +134,10 @@ class Site:
 <meta property="og:title" content="{E(title)}">
 <meta property="og:description" content="{E(desc)}">
 <meta property="og:url" content="{url}">
-<meta property="og:image" content="{self.img('hero', 1200)}">
+<meta property="og:image" content="{self.absurl(self.img('hero', 1200))}">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://lh3.googleusercontent.com">
+{'' if self.local else '<link rel="preconnect" href="https://lh3.googleusercontent.com">'}
 <link rel="stylesheet" href="/assets/site.css?v={self.ver['site.css']}">
 {gtm_head}{ld}
 </head>
@@ -143,8 +184,8 @@ Phone: <a href="{self.tel}">{d['phone']}</a><br>
         return {
             "@context": "https://schema.org", "@type": "Locksmith", "@id": self.base + "/#business",
             "name": d["legal_name"], "alternateName": d["business"], "url": self.base + "/",
-            "telephone": d["phone_e164"], "email": d["email"], "image": self.img("hero", 1200),
-            "logo": f'{d["photo_base"]}{d["logo_photo"]}=s512', "priceRange": "$$",
+            "telephone": d["phone_e164"], "email": d["email"], "image": self.absurl(self.img("hero", 1200)),
+            "logo": self.absurl(self.photo("logo", d["logo_photo"], d.get("logo_box", [0, 0, 0, 0, 512])[4])), "priceRange": "$$",
             "foundingDate": str(d["since"]),
             "address": {"@type": "PostalAddress", "addressLocality": d["city"], "addressRegion": d["st"],
                         "postalCode": d["zip"], "addressCountry": "US"},
@@ -231,6 +272,8 @@ Phone: <a href="{self.tel}">{d['phone']}</a><br>
         self.contact()
         self.book()
         self.extras()
+        if self.local:
+            self.fetch_photos()
 
     def home(self):
         d = self.d
@@ -419,7 +462,6 @@ Phone: <a href="{self.tel}">{d['phone']}</a><br>
         d = self.d
         trail = [("/", "Home"), ("/about/", "About Us")]
         hero = self.small_hero(f'About {d["business"]}', f'A local, mobile locksmith company serving {self.loc} since {d["since"]}.', trail)
-        logo = f'{d["photo_base"]}{d["logo_photo"]}=s420'
         body = f"""<section class="sec"><div class="wrap">
 <p class="center">{self.logo(240, 8)}</p>
 <h2>Who we are</h2>
@@ -500,7 +542,7 @@ Phone: <a href="{self.tel}">{d['phone']}</a><br>
             '<rect x="16" y="28" width="32" height="24" rx="4" fill="#190b04"/><circle cx="32" cy="39" r="4" fill="#e8b548"/></svg>', encoding="utf-8")
         red = "".join(f"{a} {b} 301\n" for a, b in d.get("redirects", []))
         (out / "_redirects").write_text(red, encoding="utf-8")
-        (out / "_headers").write_text("/assets/*\n  Cache-Control: public, max-age=604800\n", encoding="utf-8")
+        (out / "_headers").write_text("/assets/*\n  Cache-Control: public, max-age=604800\n/img/*\n  Cache-Control: public, max-age=2592000\n", encoding="utf-8")
         nf = (f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
               f'<title>Page not found | {E(d["business"])}</title><meta name="robots" content="noindex"><link rel="stylesheet" href="/assets/site.css"></head>'
               f'<body><header class="top"><div class="wrap"><a class="brand" href="/">{E(d["business"])}</a></div></header>'
