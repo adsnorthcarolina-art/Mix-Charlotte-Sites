@@ -49,6 +49,8 @@ class Site:
         self.needed = {}
         import hashlib
         self.ver = {f: hashlib.sha1((ROOT / "assets" / f).read_bytes()).hexdigest()[:8] for f in ("site.css", "site.js")}
+        # the stylesheet is small (9 KB): inline it so the first paint does not wait for a second request
+        self.css = (ROOT / "assets" / "site.css").read_text(encoding="utf-8").replace("\n", "")
 
     # ---------- helpers ----------
     def photo(self, name, pid, size):
@@ -140,7 +142,7 @@ class Site:
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 {head}
 {'' if self.local else '<link rel="preconnect" href="https://lh3.googleusercontent.com">'}
-<link rel="stylesheet" href="/assets/site.css?v={self.ver['site.css']}">
+<style>{self.css}</style>
 {gtm_head}{ld}
 </head>
 <body>
@@ -158,7 +160,7 @@ class Site:
 <div>{self.logo(190)}<h2>More Information</h2>
 <p><strong>{E(d['legal_name'])}</strong><br>24 Hour Locksmith<br>Monday through Sunday, all day<br>
 Mobile service from {E(self.loc)} {d['zip']}<br>
-Email: <a href="mailto:{d['email']}">{d['email']}</a><br>
+Email: <!--email_off--><a href="mailto:{d['email']}">{d['email']}</a><!--/email_off--><br>
 Phone: <a href="{self.tel}">{d['phone']}</a><br>
 <a href="{self.base}/">{self.base.replace('https://', '')}</a></p>
 <p>We accept: {E(', '.join(d['payments']))}</p>
@@ -241,7 +243,7 @@ Phone: <a href="{self.tel}">{d['phone']}</a><br>
         if not d.get("web3forms_key"):
             return (f'<div class="note"><p><strong>{E(heading)}</strong></p><p>The fastest way to reach us is by phone: '
                     f'<a href="{self.tel}">{d["phone"]}</a>, 24 hours a day. You can also email '
-                    f'<a href="mailto:{d["email"]}">{d["email"]}</a>.</p></div>')
+                    f'<!--email_off--><a href="mailto:{d["email"]}">{d["email"]}</a><!--/email_off-->.</p></div>')
         opts = "".join(f'<option>{E(s["name"])}</option>' for s in d["services"])
         return f"""<h2>{E(heading)}</h2>
 <form class="lead-form" action="https://api.web3forms.com/submit" method="POST">
@@ -595,7 +597,7 @@ Phone: <a href="{self.tel}">{d['phone']}</a><br>
 <h2>Get in touch</h2>
 <ul class="ticks">
 <li>Phone: <a href="{self.tel}">{d['phone']}</a> (24/7)</li>
-<li>Email: <a href="mailto:{d['email']}">{d['email']}</a></li>
+<li>Email: <!--email_off--><a href="mailto:{d['email']}">{d['email']}</a><!--/email_off--></li>
 <li>Hours: {E(d['hours_text'])}</li>
 <li>Service area: {E(self.loc)} {d['zip']} and <a href="/areas/">nearby towns</a>. We are a mobile service and come to you.</li>
 </ul>
