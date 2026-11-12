@@ -226,5 +226,8 @@
   ["/locksmith-services-lake-norman", "/areas/"],
   ["/locksmith-services-*", "/areas/"]
  ],
- "video": "https://youtube.com/shorts/u-4bQCCmWdU"
+ "video": "https://youtube.com/shorts/u-4bQCCmWdU",
+ "listings": [
+  {"name": "Hubbiz", "url": "https://locksmithsmatthews.hub.biz/", "note": "local business directory"}
+ ]
 }

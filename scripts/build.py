@@ -195,7 +195,7 @@ Phone: <a href="{self.tel}">{d['phone']}</a><br>
                                            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
                                            "opens": "00:00", "closes": "23:59"}],
             "areaServed": [{"@type": "City", "name": f'{a["name"]}, {d["st"]}'} for a in d["areas"]],
-            "sameAs": list(d["social"].values()) + [f'https://www.google.com/maps?cid={d["cid"]}'],
+            "sameAs": list(d["social"].values()) + [f'https://www.google.com/maps?cid={d["cid"]}'] + [x["url"] for x in d.get("listings", [])],
             "paymentAccepted": ", ".join(d["payments"]),
         }
 
@@ -559,6 +559,7 @@ Phone: <a href="{self.tel}">{d['phone']}</a><br>
 <li><a href="{d['social']['youtube']}" rel="noopener">YouTube</a>: short videos of our work{f' (<a href="{d["video"]}" rel="noopener">watch our latest video</a>)' if d.get('video') else ''}</li>
 <li><a href="{d['social']['tiktok']}" rel="noopener">TikTok</a>: short videos</li>
 <li><a href="{d['social']['x']}" rel="noopener">X</a>: updates and offers</li>
+{''.join(f'<li><a href="{x["url"]}" rel="noopener">{E(x["name"])}</a>: {E(x["note"])}</li>' for x in d.get('listings', []))}
 </ul>
 </div></section>{self.cta()}"""
         self.write("/about/", f'About Us | {d["business"]} | {self.loc}',
